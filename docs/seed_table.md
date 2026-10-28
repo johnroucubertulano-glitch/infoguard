@@ -28,6 +28,6 @@ Last two digits of student number: **04**
 
 ## My authentication questions
 
-- **Q5:** What is your favorite hero in ML?
+- **Q5:** What street did you live on in Grade 1?
 - **Q8:** What dish did you cook for the first time?
-- **Q2:** Who was your best friend during SHS?
+- **Q2:** Who was your best friend in elementary school?
