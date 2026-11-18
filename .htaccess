@@ -1,1 +1,23 @@
 Options -Indexes
+ErrorDocument 404 /infoguard/404.html
+ErrorDocument 403 /infoguard/404.html
+
+RewriteEngine On
+RewriteBase /infoguard/
+
+# 1. Typing any .php (or private file) in the address bar shows "Page Not Found".
+#    THE_REQUEST holds what the browser asked for, so internal routing below still works.
+RewriteCond %{THE_REQUEST} \.php(\?|\s|$) [NC]
+RewriteRule ^ - [R=404,L]
+RewriteRule \.(sql|md|json|lock|phar|log)$ - [R=404,L]
+RewriteRule ^(scripts|libs|docs)/ - [R=404,L]
+
+# 2. Typing a .js address in the address bar is refused; a <script> tag still loads it.
+RewriteCond %{HTTP:Sec-Fetch-Dest} ^document$ [NC]
+RewriteRule \.js$ - [R=404,L]
+
+# 3. Clean URLs -> router
+RewriteRule ^$ php/router.php?p=home [L,QSA]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-z0-9-]+)/?$ php/router.php?p=$1 [L,QSA]
