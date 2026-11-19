@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 const BASE        = '/infoguard/';
 const SYSTEM_NAME = 'InfoGuard: Secure Student Document Management System';
-const OWNER       = 'John Roucu C. bertulano';
+const OWNER       = 'John Roucu C. Bertulano';
 
 /* Class-wide settings (handout section 2.3) */
 const USER_MIN = 6;   const USER_MAX = 20;
