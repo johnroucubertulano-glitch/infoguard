@@ -156,3 +156,21 @@ select{color-scheme:dark}input[type=date]{color-scheme:dark}
 @media(max-width:760px){.dash-head{align-items:flex-start;flex-direction:column}.dashboard-stats{grid-template-columns:1fr}.dashboard-bottom{grid-template-columns:1fr}.site-header{padding:12px 16px;flex-wrap:wrap}.nav{flex-wrap:wrap}.container{padding:24px 14px 42px}.dash-head h1{font-size:23px}}
 .hero .lead{max-width:640px;margin:0 auto 28px;font-size:16px;line-height:1.6}
 .hero-actions{margin-top:0}
+/* Blurred photo background: login, register and home only */
+/* ===== Background v2: photo + glass cards ===== */
+body.page-login,body.page-register,body.page-home{position:relative;z-index:0;background:#0b1020}
+body.page-login::before,body.page-register::before,body.page-home::before{content:"";position:fixed;inset:0;z-index:-2;background:url("../images/auth-bg-v2.jpg") 30% center/cover no-repeat;animation:bgdrift 24s ease-in-out infinite alternate}
+body.page-login::after,body.page-register::after,body.page-home::after{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(11,16,32,.05),rgba(11,16,32,.6))}
+@keyframes bgdrift{from{transform:scale(1)}to{transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){body.page-login::before,body.page-register::before,body.page-home::before{animation:none}}
+body.page-login .card,body.page-register .card{background:rgba(17,24,39,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-color:rgba(165,180,252,.22)}
+body.page-login .card p.muted{margin-bottom:18px}
+body.page-login .card .center.small{margin-top:16px}
+@media(min-width:960px){
+  body.page-login .container{display:grid;grid-template-columns:1fr minmax(0,460px);grid-template-areas:". msg" ". card";align-content:center;padding-right:8vw}
+  body.page-login .container>.msg{grid-area:msg;margin:0 0 16px}
+  body.page-login .container>.card{grid-area:card;margin:0;max-width:none}
+  body.page-home .hero{text-align:left;margin-left:auto;max-width:560px;padding-right:2vw}
+  body.page-home .hero h1,body.page-home .hero .lead{margin-left:0}
+  body.page-home .hero-actions{justify-content:flex-start}
+}

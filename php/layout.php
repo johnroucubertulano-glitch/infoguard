@@ -8,7 +8,7 @@ function page_start(string $title, string $page = 'other'): void {
        . '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
        . '<title>' . e($title) . ' | InfoGuard</title>'
        . '<link rel="stylesheet" href="' . BASE . 'css/style.css?v=final1"></head>'
-       . '<body data-base="' . BASE . '"' . $attr . '>'
+       . '<body class="page-' . e($page) . '" data-base="' . BASE . '"' . $attr . '>'
        . '<div class="prospect"><span class="prospect-dot"></span>' . e(SYSTEM_NAME) . '</div>'
        . '<header class="site-header"><a class="brand" href="' . BASE . 'dashboard"><img src="' . BASE . 'images/logo.svg" alt="" width="30" height="30"><span>Info<span class="brand-accent">Guard</span><small>SECURE DOCUMENT PORTAL</small></span></a><nav class="nav">';
     if ($auth) {
