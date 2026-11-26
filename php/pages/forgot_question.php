@@ -37,8 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             go('reset-otp');
         }
         $secs = register_failure($key, $user, $typed, 'wrong security answer');   // counts toward the SAME lockout
-        if ($secs > 0) { $lock = $secs; $msg = 'Too many failed attempts. Please wait.'; }
-        else $msg = 'Incorrect answer. Please try again.';
+        if ($secs > 0) { $lock = $secs; $msg = 'Account locked for ' . $secs . ' seconds.'; }
+        else $msg = 'Incorrect answer. ' . attempts_text(attempts_left($key));
     }
 }
 page_start('Security question', 'other');

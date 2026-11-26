@@ -156,9 +156,64 @@
     }, 400);
   });
 
+  // ----- Step-by-step form with a progress bar -----
+  const steps = Array.from(form.querySelectorAll('.step'));
+  const dots = Array.from(document.querySelectorAll('#stepper li'));
+  const bar = document.getElementById('progressBar');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  let cur = 0;
+  form.classList.add('js-steps');          // without JavaScript every step stays visible and the form still works
+
+  function validateStep(i) {
+    let first = null;
+    Array.from(steps[i].querySelectorAll('[name]')).forEach(function (el) {
+      if (rules[el.name] && check(el.name) && !first) first = el;
+    });
+    if (first) first.focus();
+    return !first;
+  }
+  function go(i, focus) {
+    cur = Math.max(0, Math.min(steps.length - 1, i));
+    steps.forEach(function (s, k) { s.classList.toggle('active', k === cur); });
+    dots.forEach(function (li, k) {
+      li.classList.toggle('current', k === cur);
+      li.classList.toggle('done', k < cur);
+      li.querySelector('span').textContent = k < cur ? '\u2713' : String(k + 1);
+    });
+    bar.className = 'p' + (cur + 1);
+    prevBtn.classList.toggle('hidden', cur === 0);
+    nextBtn.classList.toggle('hidden', cur === steps.length - 1);
+    submitBtn.classList.toggle('hidden', cur !== steps.length - 1);
+    if (focus !== false) {
+      const f = steps[cur].querySelector('input:not([type=hidden]):not([readonly]), select');
+      if (f) f.focus({ preventScroll: true });
+      form.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+  nextBtn.addEventListener('click', function () { if (validateStep(cur)) go(cur + 1); });
+  prevBtn.addEventListener('click', function () { go(cur - 1); });
+  dots.forEach(function (li, k) { li.addEventListener('click', function () { if (k < cur) go(k); }); });   // go back to a finished step
+  form.addEventListener('keydown', function (e) {      // Enter moves to the next step instead of submitting early
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox' && cur < steps.length - 1) {
+      e.preventDefault(); nextBtn.click();
+    }
+  });
+
+  // If the server sent errors back, open the step that has the first one
+  const firstErr = Array.from(form.querySelectorAll('.err')).find(function (el) { return el.textContent.trim() !== ''; });
+  go(firstErr ? Math.max(0, steps.indexOf(firstErr.closest('.step'))) : 0, false);
+
+  // Final check on submit: jump to the step that holds the first problem
   form.addEventListener('submit', function (e) {
-    let bad = false;
-    Object.keys(rules).forEach(function (n) { if (check(n)) bad = true; });
-    if (bad) { e.preventDefault(); const f = form.querySelector('.invalid'); if (f) f.focus(); }
+    let first = null;
+    Object.keys(rules).forEach(function (n) { if (check(n) && !first) first = $(n); });
+    if (first) {
+      e.preventDefault();
+      const s = first.closest('.step');
+      if (s) go(steps.indexOf(s), false);
+      first.focus();
+    }
   });
 })();

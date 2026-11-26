@@ -2,7 +2,6 @@
 page_start('Home', 'home');
 ?>
 <section class="hero">
-    <p class="eyebrow">Caraga State University &middot; IT 107</p>
     <h1>Keep your student documents safe.</h1>
     <p class="lead">InfoGuard is a secure document management system with verified registration, two-step log-in and active monitoring of every sign-in attempt.</p>
     <div class="hero-actions"><a class="btn" href="<?= BASE ?>register">Create an account</a><a class="btn-ghost" href="<?= BASE ?>login">Log-in</a></div>

@@ -14,9 +14,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif (!captcha_ok()) { log_event('CAPTCHA_FAILED', $username); $msg = 'Incorrect CAPTCHA. Please try again.'; }   // my call: a CAPTCHA miss is not a failed log-in
     else {
         $user = null;
-        if (preg_match('/^[A-Za-z][A-Za-z0-9]{' . (USER_MIN - 1) . ',' . (USER_MAX - 1) . '}$/', $username) && strlen($pw) >= PASS_MIN && strlen($pw) <= PASS_MAX)
-            $user = row("SELECT * FROM users WHERE username=?", 's', [$username]);
-        $ok = $user ? password_verify($pw, $user['password_hash']) : (password_hash($pw, PASSWORD_BCRYPT, ['cost' => 12]) && false);   // same work either way
+        if (preg_match('/^[A-Za-z][A-Za-z0-9]{' . (USER_MIN - 1) . ',' . (USER_MAX - 1) . '}$/', $username) )
+            $user = row("SELECT * FROM users WHERE username=?", 's', [$username]);   // look the user up even if the typed password is short, so a wrong guess is counted and the owner is alerted
+        $ok = $user ? (strlen($pw) <= PASS_MAX && password_verify($pw, $user['password_hash'])) : (password_hash($pw, PASSWORD_BCRYPT, ['cost' => 12]) && false);   // same work either way
 
         if ($ok) {
             if (!$user['is_verified']) {
@@ -30,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             go('login-otp');
         }
         $secs = register_failure($key, $user, $username, 'wrong username or password');
-        if ($secs > 0) { $lock = $secs; $msg = 'Too many failed attempts. Please wait.'; }
-        else $msg = 'Invalid username or password.';        // identical whether or not the username exists
+        if ($secs > 0) { $lock = $secs; $msg = 'Account locked for ' . $secs . ' seconds.'; }
+        else $msg = 'Invalid username or password. ' . attempts_text(attempts_left($key));        // identical whether or not the username exists
     }
 } elseif ($key !== '') {
     $lock = lock_remaining($key);

@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $v['confirm'] = (string)($_POST['confirm'] ?? '');
     $v['email'] = strtolower($v['email']);
 
-    if ($v['website'] !== '') go('login');             // honeypot: a bot filled the hidden field, refuse silently
+if ($v['website'] !== '') { log_event('HONEYPOT_TRIGGERED', $v['username']); go('login'); }
 
     $errors = validate_registration($v);
     if (!captcha_ok()) { $errors['captcha'] = 'Incorrect CAPTCHA. Please try again.'; log_event('CAPTCHA_FAILED', $v['username']); }
@@ -62,6 +62,16 @@ page_start('Register', 'register');
 <?= csrf_field() ?>
 <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input type="text" name="website" id="website" tabindex="-1" autocomplete="off"></div>
 
+<ol class="stepper" id="stepper" aria-label="Registration progress">
+<li><span>1</span><em>Personal</em></li>
+<li><span>2</span><em>Address</em></li>
+<li><span>3</span><em>Student</em></li>
+<li><span>4</span><em>Account</em></li>
+<li><span>5</span><em>Security</em></li>
+</ol>
+<div class="progress"><span class="p1" id="progressBar"></span></div>
+
+<div class="step" data-step="1">
 <h2>Personal information</h2>
 <div class="grid-2">
 <?= field('id_number', 'ID Number', $o + ['value' => $v['id_number'], 'placeholder' => 'xxxx-xxxx', 'maxlength' => 9]) ?>
@@ -77,6 +87,8 @@ page_start('Register', 'register');
 <?= field('age', 'Age', ['type' => 'text', 'value' => $v['birthdate'] && valid_date($v['birthdate']) ? (string)age_from($v['birthdate']) : '', 'readonly' => true, 'required' => false, 'errors' => []]) ?>
 </div>
 
+</div>
+<div class="step" data-step="2">
 <h2>Address</h2>
 <div class="grid-2">
 <?= field('street', 'Purok / Street', $o + ['value' => $v['street'], 'maxlength' => 50]) ?>
@@ -87,6 +99,8 @@ page_start('Register', 'register');
 <?= field('zip', 'ZIP Code', $o + ['value' => $v['zip'], 'maxlength' => 4, 'inputmode' => 'numeric']) ?>
 </div>
 
+</div>
+<div class="step" data-step="3">
 <h2>Student information</h2>
 <div class="grid-2">
 <?= field('emergency', 'Emergency Contact Number', $o + ['value' => $v['emergency'], 'placeholder' => '09xxxxxxxxx', 'maxlength' => 11, 'inputmode' => 'numeric']) ?>
@@ -95,6 +109,8 @@ page_start('Register', 'register');
 <?= field('remarks', 'Remarks', $o + ['value' => $v['remarks'], 'required' => false, 'maxlength' => 100]) ?>
 </div>
 
+</div>
+<div class="step" data-step="4">
 <h2>Account</h2>
 <div class="grid-2">
 <?= field('email', 'Email', $o + ['type' => 'email', 'value' => $v['email'], 'maxlength' => 100]) ?>
@@ -103,6 +119,8 @@ page_start('Register', 'register');
 <?= field('confirm', 'Re-enter Password', $o + ['type' => 'password', 'maxlength' => PASS_MAX, 'autocomplete' => 'new-password']) ?>
 </div>
 
+</div>
+<div class="step" data-step="5">
 <h2>Authentication questions</h2>
 <p class="muted">Choose three different questions. You will need them if you forget your password.</p>
 <?php foreach ([1, 2, 3] as $i): ?>
@@ -119,7 +137,12 @@ page_start('Register', 'register');
 </div>
 
 <?= captcha_block($errors) ?>
-<button class="btn block" type="submit">Create account</button>
+</div>
+<div class="step-nav">
+<button type="button" class="btn-ghost step-only" id="prevBtn">Back</button>
+<button type="button" class="btn step-only" id="nextBtn">Next</button>
+<button class="btn" type="submit" id="submitBtn">Create account</button>
+</div>
 </form>
 <p class="center small">Already registered? <a href="<?= BASE ?>login">Log-in</a></p>
 </section>

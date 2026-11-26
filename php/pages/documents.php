@@ -46,8 +46,8 @@ page_start('My Documents', 'other');
  <div class="section-heading"><div><h2>Folders</h2><p class="muted small">Keep documents organized by subject or requirement.</p></div></div>
  <div class="folder-list"><a class="folder-chip <?= !$activeFolder ? 'selected' : '' ?>" href="<?= BASE ?>documents">All documents</a><?php foreach ($folders as $f): ?><a class="folder-chip <?= $activeFolder === (int)$f['id'] ? 'selected' : '' ?>" href="<?= BASE ?>documents?folder=<?= (int)$f['id'] ?>">📁 <?= e($f['folder_name']) ?></a><?php endforeach; ?></div>
  <form method="POST" class="folder-create"><?= csrf_field() ?><input type="text" name="folder_name" maxlength="80" placeholder="New folder name" required><button class="btn-ghost" type="submit" name="create_folder" value="1">Create folder</button></form>
- <?php if ($activeFolder): ?>
- <form method="POST" action="<?= BASE ?>delete-folder" data-confirm="Delete this folder? Its documents will move to Unfiled."><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$activeFolder ?>"><button class="btn-danger compact" type="submit">Delete this folder</button></form>
+<?php if ($activeFolder): ?>
+ <form method="POST" action="<?= BASE ?>delete-folder" class="folder-delete" data-confirm="Delete this folder? Its documents will move to Unfiled."><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$activeFolder ?>"><button class="btn-danger compact" type="submit">Delete this folder</button></form>
 <?php endif; ?>
 </section>
 <section class="card">

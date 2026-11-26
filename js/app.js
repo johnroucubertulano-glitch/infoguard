@@ -86,11 +86,10 @@
     };
     arm();
   }
-
-  // Confirm before destructive actions (replaces the old inline onsubmit)
-document.querySelectorAll('form[data-confirm]').forEach(function (f) {
-  f.addEventListener('submit', function (e) {
-    if (!confirm(f.dataset.confirm)) e.preventDefault();
+  // Confirm before destructive actions (replaces the old inline onsubmit; allowed by the CSP)
+  document.querySelectorAll('form[data-confirm]').forEach(function (f) {
+    f.addEventListener('submit', function (e) {
+      if (!confirm(f.dataset.confirm)) e.preventDefault();
+    });
   });
-});
 })();

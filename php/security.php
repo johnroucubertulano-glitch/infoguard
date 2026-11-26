@@ -10,6 +10,16 @@ function tracker_reset(string $key): void {
     q("DELETE FROM login_tracker WHERE key_name=?", 's', [$key]);
     $_SESSION['fails'] = 0;
 }
+/* Attempts left before the next lockout (a lockout comes after every 3rd failure in a row).
+   It counts the TYPED username, real or not, so it never reveals whether the account exists. */
+function attempts_left(string $key): int {
+    $r = row("SELECT failed FROM login_tracker WHERE key_name=?", 's', [$key]);
+    return 3 - ((int)($r['failed'] ?? 0) % 3);
+}
+function attempts_text(int $left): string {
+    return $left . ' incorrect attempt' . ($left === 1 ? '' : 's') . ' remaining before lockout.';
+}
+
 /* Called for every wrong password OR wrong security answer. Returns lock seconds (0 = none). */
 function register_failure(string $key, ?array $user, string $typed, string $why): int {
     log_event('LOGIN_FAILED', $typed, $user['id_number'] ?? null, $why);
@@ -42,13 +52,19 @@ function ip_block_seconds(string $ip): int {
 
 /* ---------- Alert emails ---------- */
 function send_alert(array $u, string $subject, string $text, ?int $count = null): void {
-    $body = '<p>Hi ' . e($u['first_name']) . ',</p><p>' . e($text) . '</p><ul>'
-          . ($count !== null ? '<li>Failed attempts: ' . $count . '</li>' : '')
-          . '<li>Date and time: ' . date('Y-m-d H:i:s') . ' PHT</li>'
-          . '<li>IP address: ' . e(ip()) . '</li>'
-          . '<li>Browser / device: ' . e(ua()) . '</li></ul>'
-          . '<p>If this was not you, reset your password now: <a href="' . e(base_url()) . 'forgot">Forgot Password</a></p>';
-    send_mail($u['email'], APP_NAME_SHORT . ': ' . $subject, $body);
+    $tone = stripos($subject, 'changed') !== false ? 'ok' : 'warn';
+    $rows = [];
+    if ($count !== null) $rows['Failed attempts'] = (string)$count;
+    $rows['Date and time'] = date('F j, Y, h:i A') . ' PHT';
+    $rows['IP address'] = ip();
+    $rows['Browser / device'] = ua();
+    $url = base_url() . 'forgot';
+    $content = email_notice($text, $tone) . email_details($rows)
+        . '<p style="margin:22px 0 0;font-size:14px;line-height:1.6;color:#cbd5e1;">If this was not you, reset your password now.</p>'
+        . email_button('Reset my password', $url)
+        . '<p style="margin:14px 0 0;font-size:12px;color:#64748b;text-align:center;word-break:break-all;">' . e($url) . '</p>';
+    send_mail($u['email'], APP_NAME_SHORT . ': ' . $subject,
+        email_layout($subject, 'Hi ' . e($u['first_name']) . ', here is what happened on your InfoGuard account.', $content, $tone));
     log_event('ALERT_EMAIL_SENT', null, $u['id_number'], $subject);
 }
 const APP_NAME_SHORT = 'InfoGuard';
@@ -62,10 +78,13 @@ function otp_issue(string $uid, string $purpose, string $email, string $name): v
     $exp = time() + OTP_MINUTES * 60;
     q("INSERT INTO otps(id_number,purpose,code_hash,expires_at) VALUES(?,?,?,?)", 'ssss', [$uid, $purpose, otp_hash($code), date('Y-m-d H:i:s', $exp)]);
     $title = ['register' => 'Verify your account', 'login' => 'Your log-in code', 'reset' => 'Password reset code'][$purpose];
+    $what = ['register' => 'verify your account', 'login' => 'log in', 'reset' => 'reset your password'][$purpose];
+    $body = email_code($code)
+        . '<p style="margin:20px 0 0;font-size:14px;line-height:1.6;color:#cbd5e1;text-align:center;">This code expires at <strong style="color:#f8fafc;">'
+        . date('h:i A', $exp) . ' PHT</strong> (' . OTP_MINUTES . ' minutes).<br>Never share it with anyone.</p>';
     send_mail($email, SYSTEM_NAME . ' - ' . $title,
-        '<h3>' . e(SYSTEM_NAME) . '</h3><p>' . e($title) . '</p><h1>' . $code . '</h1>'
-        . '<p>This code expires at ' . date('h:i A', $exp) . ' PHT (' . OTP_MINUTES . ' minutes).</p>'
-        . '<p>If you did not request this code, ignore this email and consider changing your password.</p>');
+        email_layout($title, 'Hi ' . e($name) . ', use this code to ' . $what . '.', $body, 'info',
+            'If you did not request this code, ignore this email and consider changing your password.'));
     log_event('OTP_SENT', null, $uid, $purpose);
 }
 function otp_check(string $uid, string $purpose, string $code): string {
