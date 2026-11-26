@@ -46,13 +46,16 @@ page_start('My Documents', 'other');
  <div class="section-heading"><div><h2>Folders</h2><p class="muted small">Keep documents organized by subject or requirement.</p></div></div>
  <div class="folder-list"><a class="folder-chip <?= !$activeFolder ? 'selected' : '' ?>" href="<?= BASE ?>documents">All documents</a><?php foreach ($folders as $f): ?><a class="folder-chip <?= $activeFolder === (int)$f['id'] ? 'selected' : '' ?>" href="<?= BASE ?>documents?folder=<?= (int)$f['id'] ?>">📁 <?= e($f['folder_name']) ?></a><?php endforeach; ?></div>
  <form method="POST" class="folder-create"><?= csrf_field() ?><input type="text" name="folder_name" maxlength="80" placeholder="New folder name" required><button class="btn-ghost" type="submit" name="create_folder" value="1">Create folder</button></form>
+ <?php if ($activeFolder): ?>
+ <form method="POST" action="<?= BASE ?>delete-folder" data-confirm="Delete this folder? Its documents will move to Unfiled."><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$activeFolder ?>"><button class="btn-danger compact" type="submit">Delete this folder</button></form>
+<?php endif; ?>
 </section>
 <section class="card">
  <div class="section-heading"><div><h2><?= $activeFolder ? 'Folder documents' : 'All documents' ?></h2><p class="muted small">Only you can access files uploaded to your account.</p></div>
  <form method="GET" action="<?= BASE ?>documents" class="search-form"><input type="search" name="q" value="<?= e($search) ?>" placeholder="Search documents"><button class="btn-ghost">Search</button></form></div>
  <?php if (!$docs): ?><div class="empty-state"><div class="empty-icon">📄</div><h3>No documents found</h3><p class="muted">Upload a document to get started, or choose another folder.</p></div><?php else: ?>
  <div class="table-wrap"><table><thead><tr><th>Document</th><th>Folder</th><th>Size</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody>
- <?php foreach ($docs as $d): ?><tr><td><strong>📄 <?= e($d['original_name']) ?></strong><div class="muted small"><?= e($d['mime_type']) ?></div></td><td><?= e($d['folder_name'] ?: 'Unfiled') ?></td><td><?= e(number_format((int)$d['file_size'] / 1024, 1)) ?> KB</td><td><?= e($d['uploaded_at']) ?></td><td class="actions"><a class="btn-ghost compact" href="<?= BASE ?>download?id=<?= (int)$d['id'] ?>">Download</a><form method="POST" action="<?= BASE ?>delete-document" onsubmit="return confirm('Delete this document permanently?')"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$d['id'] ?>"><button class="btn-danger compact" type="submit">Delete</button></form></td></tr><?php endforeach; ?>
+ <?php foreach ($docs as $d): ?><tr><td><strong>📄 <?= e($d['original_name']) ?></strong><div class="muted small"><?= e($d['mime_type']) ?></div></td><td><?= e($d['folder_name'] ?: 'Unfiled') ?></td><td><?= e(number_format((int)$d['file_size'] / 1024, 1)) ?> KB</td><td><?= e($d['uploaded_at']) ?></td><td class="actions"><a class="btn-ghost compact" href="<?= BASE ?>download?id=<?= (int)$d['id'] ?>">Download</a><form method="POST" action="<?= BASE ?>delete-document" data-confirm="Delete this document permanently?"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$d['id'] ?>"><button class="btn-danger compact" type="submit">Delete</button></form></td></tr><?php endforeach; ?>
  </tbody></table></div><?php endif; ?>
 </section>
 <?php page_end();
